@@ -1568,7 +1568,7 @@ const PRESETS = {
   },
   jaod: {
     seniority: { "1L":25, "Unitranche":30, "DDTL":30, "Revolver":25, "ABF":50, "2L":100, "Bond":100, "Unsecured":100, "Preferred":100, "Equity":100, "JV":50, "CLO":100, "Unknown":100 },
-    sectors: { "Software & Technology":50, _default: 20 },
+    sectors: { "Software & Technology":25, _default: 10 },
     repricing: 1.5
   },
   // ── Historical scenarios (validated, source-cited) ──
@@ -7690,7 +7690,7 @@ setTimeout(() => {
 (function() {
   const el = document.createElement('div');
   el.style.cssText = 'position:fixed;bottom:8px;right:12px;font-size:10px;color:#999;z-index:1000;pointer-events:none';
-  const deployTs = 'May 13, 2026 10:10 AM PDT · V2 data (PARSER_V2)';
+  const deployTs = 'May 13, 2026 10:14 AM PDT · V2 data (PARSER_V2)';
   if (deployTs.startsWith('__')) {
     el.textContent = 'Local dev';
   } else {
