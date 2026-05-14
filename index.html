@@ -656,37 +656,72 @@
 </style>
 
 <style id="v2-pin-css">
-  /* Excel-style freeze: when "Freeze" is on, both the Seniority and
-     Sector loss-rate boxes stick to top:0 as the user scrolls down.
-     They scroll normally with the page until they reach the top of
-     the viewport, then they cut over content beneath them — opaque
-     white background, high z-index, drop shadow underneath. */
-  .controls-panel.pin-active {
-    align-items: start;
-  }
+  /* Sticky-freeze behavior unchanged — frozen panels cut over scrolling
+     content with an opaque white surface + soft shadow. */
+  .controls-panel.pin-active { align-items: start; }
   .controls-panel.pin-active > .control-box.pin-target {
     position: sticky;
     top: 0;
     z-index: 100;
     max-height: 100vh;
     overflow-y: auto;
-    /* OPAQUE white so content scrolling past underneath is fully
-       covered (matches the Excel frozen-row behavior). */
     background: #ffffff;
-    border: 1px solid #aaa;
-    box-shadow: 0 6px 14px rgba(0,0,0,0.18);
+    border: 1px solid rgba(0,0,0,0.10);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.06);
   }
+
+  /* macOS-style switch — an Apple-flavored toggle in place of the
+     standard checkbox. SF Pro stack, capsule track, soft easing.
+     Only the control changes; the freeze behavior wired below is
+     identical to the prior checkbox version. */
   .freeze-toggle {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    font-size: 11px;
-    color: #666;
-    margin-right: 8px;
+    gap: 7px;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    color: #1d1d1f;
+    letter-spacing: -0.01em;
     cursor: pointer;
     user-select: none;
+    margin-right: 8px;
   }
-  .freeze-toggle input { margin: 0 2px 0 0; cursor: pointer; }
+  .freeze-toggle input { /* hidden — the switch is the styled label */
+    appearance: none;
+    -webkit-appearance: none;
+    position: relative;
+    width: 30px;
+    height: 18px;
+    border-radius: 999px;
+    background: rgba(120, 120, 128, 0.16);
+    cursor: pointer;
+    transition: background-color 220ms cubic-bezier(0.4, 0, 0.2, 1);
+    flex: 0 0 auto;
+    margin: 0;
+    outline: none;
+  }
+  .freeze-toggle input::before {
+    content: "";
+    position: absolute;
+    top: 1px;
+    left: 1px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.18), 0 1px 1px rgba(0,0,0,0.06);
+    transition: transform 220ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .freeze-toggle input:checked {
+    background: #34c759;  /* macOS accent green */
+  }
+  .freeze-toggle input:checked::before {
+    transform: translateX(12px);
+  }
+  .freeze-toggle input:focus-visible {
+    box-shadow: 0 0 0 3px rgba(52, 199, 89, 0.30);
+  }
 </style>
 </head>
 <body>
@@ -7903,7 +7938,7 @@ setTimeout(() => {
 (function() {
   const el = document.createElement('div');
   el.style.cssText = 'position:fixed;bottom:8px;right:12px;font-size:10px;color:#999;z-index:1000;pointer-events:none';
-  const deployTs = 'May 13, 2026 6:10 PM PDT · V2 data (PARSER_V2)';
+  const deployTs = 'May 13, 2026 6:16 PM PDT · V2 data (PARSER_V2)';
   if (deployTs.startsWith('__')) {
     el.textContent = 'Local dev';
   } else {
