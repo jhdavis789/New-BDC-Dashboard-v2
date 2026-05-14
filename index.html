@@ -656,23 +656,27 @@
 </style>
 
 <style id="v2-pin-css">
-  /* Excel-style freeze: when "Pin" is on, both the Seniority and
+  /* Excel-style freeze: when "Freeze" is on, both the Seniority and
      Sector loss-rate boxes stick to top:0 as the user scrolls down.
      They scroll normally with the page until they reach the top of
-     the viewport, then they freeze. */
+     the viewport, then they cut over content beneath them — opaque
+     white background, high z-index, drop shadow underneath. */
   .controls-panel.pin-active {
-    align-items: start;  /* sticky needs an aligned grid item */
+    align-items: start;
   }
   .controls-panel.pin-active > .control-box.pin-target {
     position: sticky;
     top: 0;
-    z-index: 60;
+    z-index: 100;
     max-height: 100vh;
     overflow-y: auto;
-    background: var(--card-bg, #fff);
-    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    /* OPAQUE white so content scrolling past underneath is fully
+       covered (matches the Excel frozen-row behavior). */
+    background: #ffffff;
+    border: 1px solid #aaa;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.18);
   }
-  .pin-toggle {
+  .freeze-toggle {
     display: inline-flex;
     align-items: center;
     gap: 4px;
@@ -682,7 +686,7 @@
     cursor: pointer;
     user-select: none;
   }
-  .pin-toggle input { margin: 0 2px 0 0; cursor: pointer; }
+  .freeze-toggle input { margin: 0 2px 0 0; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -835,7 +839,7 @@
 
     <div class="controls-panel">
       <div class="control-box">
-        <h3 style="display:flex;align-items:center;gap:6px"><label class="pin-toggle" title="Pin this panel — keep it visible while scrolling"><input type="checkbox" id="pin-seniority"> Pin</label>Seniority Total Loss Rates <span class="info-btn" data-info="lossModel">&#9432;</span></h3>
+        <h3 style="display:flex;align-items:center;gap:6px"><label class="freeze-toggle" title="Freeze the loss-rate panels — keep them visible while scrolling"><input type="checkbox" id="freeze-seniority"> Freeze</label>Seniority Total Loss Rates <span class="info-btn" data-info="lossModel">&#9432;</span></h3>
         <div class="info-popup" data-popup="lossModel" style="display:none;position:relative;margin-bottom:8px">
           <p><strong>Two independent risk dimensions.</strong> Seniority rates reflect capital stack position (structural protection). Sector rates reflect cyclical/macro exposure. They combine multiplicatively:</p>
           <p style="font-family:monospace;background:#f5f5f0;padding:6px 10px;border-radius:4px">Combined = 1 − (1 − seniority) × (1 − sector)</p>
@@ -7897,7 +7901,7 @@ setTimeout(() => {
 (function() {
   const el = document.createElement('div');
   el.style.cssText = 'position:fixed;bottom:8px;right:12px;font-size:10px;color:#999;z-index:1000;pointer-events:none';
-  const deployTs = 'May 13, 2026 5:53 PM PDT · V2 data (PARSER_V2)';
+  const deployTs = 'May 13, 2026 6:02 PM PDT · V2 data (PARSER_V2)';
   if (deployTs.startsWith('__')) {
     el.textContent = 'Local dev';
   } else {
@@ -7910,18 +7914,16 @@ setTimeout(() => {
 <script id="v2-pin-js">
 (function(){
   function init() {
-    var cb = document.getElementById('pin-seniority');
+    var cb = document.getElementById('freeze-seniority');
     if (!cb) return;
     var seniorityBox = cb.closest('.control-box');
     if (!seniorityBox) return;
-    var panel = seniorityBox.parentElement;  // .controls-panel grid
+    var panel = seniorityBox.parentElement;
     if (!panel) return;
-    // Excel-style: BOTH the Seniority and Sector boxes (the two
-    // grid cells on the top row) get marked as pin-targets. They
-    // stick to top:0 once the user scrolls past them. We tag only
-    // the first two .control-box children — the third+ (repricing
-    // window, impaired exposure) span the full grid and don't make
-    // sense to pin.
+    // Both the Seniority and Sector boxes (the first two grid cells)
+    // freeze. The remaining .control-box children (repricing window,
+    // impaired exposure) span the full grid and aren't appropriate
+    // freeze targets.
     var boxes = panel.querySelectorAll(':scope > .control-box');
     var targets = [];
     for (var i = 0; i < Math.min(2, boxes.length); i++) {
