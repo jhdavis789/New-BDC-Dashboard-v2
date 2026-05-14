@@ -287,6 +287,12 @@
     padding: 8px 6px;
     border-bottom: 1px solid #eee;
     text-align: center;
+    /* Prevent narrow grid columns from being blown out by long
+       bar-segment labels (e.g. "Software/Technology 23%"). Grid items
+       default to min-width:auto which honors content min-size; this
+       forces them to clip instead. */
+    min-width: 0;
+    overflow: hidden;
   }
   .stacks-grid .bdc-header {
     font-weight: 700;
@@ -650,16 +656,21 @@
 </style>
 
 <style id="v2-pin-css">
-  .control-box.pinned {
-    position: fixed !important;
-    top: 60px;
-    left: 12px;
-    width: min(340px, 32vw);
-    max-height: calc(100vh - 80px);
-    overflow-y: auto;
+  /* Excel-style freeze: when "Pin" is on, both the Seniority and
+     Sector loss-rate boxes stick to top:0 as the user scrolls down.
+     They scroll normally with the page until they reach the top of
+     the viewport, then they freeze. */
+  .controls-panel.pin-active {
+    align-items: start;  /* sticky needs an aligned grid item */
+  }
+  .controls-panel.pin-active > .control-box.pin-target {
+    position: sticky;
+    top: 0;
     z-index: 60;
-    box-shadow: 0 4px 18px rgba(0,0,0,0.18);
-    border: 1px solid #888;
+    max-height: 100vh;
+    overflow-y: auto;
+    background: var(--card-bg, #fff);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
   }
   .pin-toggle {
     display: inline-flex;
@@ -7886,7 +7897,7 @@ setTimeout(() => {
 (function() {
   const el = document.createElement('div');
   el.style.cssText = 'position:fixed;bottom:8px;right:12px;font-size:10px;color:#999;z-index:1000;pointer-events:none';
-  const deployTs = 'May 13, 2026 5:39 PM PDT · V2 data (PARSER_V2)';
+  const deployTs = 'May 13, 2026 5:53 PM PDT · V2 data (PARSER_V2)';
   if (deployTs.startsWith('__')) {
     el.textContent = 'Local dev';
   } else {
@@ -7901,13 +7912,24 @@ setTimeout(() => {
   function init() {
     var cb = document.getElementById('pin-seniority');
     if (!cb) return;
-    // The seniority control-box is the first .control-box inside the
-    // first .controls-panel on the stress tab. Walk up from the
-    // checkbox to find it instead of relying on a brittle selector.
-    var box = cb.closest('.control-box');
-    if (!box) return;
+    var seniorityBox = cb.closest('.control-box');
+    if (!seniorityBox) return;
+    var panel = seniorityBox.parentElement;  // .controls-panel grid
+    if (!panel) return;
+    // Excel-style: BOTH the Seniority and Sector boxes (the two
+    // grid cells on the top row) get marked as pin-targets. They
+    // stick to top:0 once the user scrolls past them. We tag only
+    // the first two .control-box children — the third+ (repricing
+    // window, impaired exposure) span the full grid and don't make
+    // sense to pin.
+    var boxes = panel.querySelectorAll(':scope > .control-box');
+    var targets = [];
+    for (var i = 0; i < Math.min(2, boxes.length); i++) {
+      targets.push(boxes[i]);
+    }
     cb.addEventListener('change', function(){
-      box.classList.toggle('pinned', cb.checked);
+      panel.classList.toggle('pin-active', cb.checked);
+      targets.forEach(function(b){ b.classList.toggle('pin-target', cb.checked); });
     });
   }
   if (document.readyState === 'loading') {
